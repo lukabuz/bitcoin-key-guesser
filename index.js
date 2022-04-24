@@ -3,35 +3,38 @@
 process.title = "bitcoin-key-guesser by lukabuz";
 
 const CoinKey = require("coinkey");
-const { createClient } = require("redis");
+const Redis = require("ioredis");
 const fs = require("fs");
 
 async function generate(redisClient) {
-  // generate random private key hex
-  let privateKeyHex = r(64);
+  return new Promise(async (resolve) => {
+    // generate random private key hex
+    let privateKeyHex = r(64);
 
-  // create new bitcoin key pairs
-  let ck = new CoinKey(Buffer.from(privateKeyHex, "hex"));
+    // create new bitcoin key pairs
+    let ck = new CoinKey(Buffer.from(privateKeyHex, "hex"));
 
-  ck.compressed = false;
+    ck.compressed = false;
 
-  // if generated wallet matches any known addresses file, tell us we won!
-  const value = await redisClient.hGet("addresses", ck.publicAddress);
-  if (value == 1) {
-    console.log("");
-    process.stdout.write("\x07");
-    console.log("\x1b[32m%s\x1b[0m", ">> Success: " + ck.publicAddress);
-    var successString =
-      "Wallet: " + ck.publicAddress + "\n\nSeed: " + ck.privateWif;
+    // if generated wallet matches any known addresses file, tell us we won!
+    const value = await redisClient.hget("addresses", ck.publicAddress);
+    if (value == 1) {
+      console.log("");
+      process.stdout.write("\x07");
+      console.log("\x1b[32m%s\x1b[0m", ">> Success: " + ck.publicAddress);
+      var successString =
+        "Wallet: " + ck.publicAddress + "\n\nSeed: " + ck.privateWif;
 
-    // save the wallet and its private key (seed) to a Success.txt file in the same folder
-    fs.writeFileSync("./Success.txt", successString, (err) => {
-      if (err) throw err;
-    });
+      // save the wallet and its private key (seed) to a Success.txt file in the same folder
+      fs.writeFileSync("./Success.txt", successString, (err) => {
+        if (err) throw err;
+      });
 
-    // close program after success
-    process.exit();
-  }
+      // close program after success
+      process.exit();
+    }
+    resolve();
+  });
 }
 
 // the function to generate random hex string
@@ -51,14 +54,8 @@ function r(l) {
     "\x1b[32m%s\x1b[0m",
     ">> Program Started and is working silently (edit code if you want logs)"
   );
-
-  const client = createClient();
-
-  client.on("error", (err) => console.log("Redis Client Error", err));
-
-  await client.connect();
-
+  const client = new Redis();
   while (true) {
-    generate(client);
+    await generate(client);
   }
 })();

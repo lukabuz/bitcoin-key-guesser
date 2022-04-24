@@ -1,1 +1,1 @@
-sed 's/.*/HSET addresses & 1/' riches.txt | pv > redis.txt
+sed 's/.*/HSET addresses & 1/' riches.txt > redis.txt
