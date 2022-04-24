@@ -43,4 +43,10 @@ cat redis.txt | redis-cli --pipe
 npm start
 ```
 
-If the script finds a match, it will exit the process and generate a file called Success.txt that will contain the address and its seed.
+If the script finds a match, it will produce a log and add an entry into the hashset called "found" that will have the public address as the key and its seed as the value.
+
+## Speed
+
+With decent consumer grade hardware, this script can generate and check 300000 addresses per minute regardless of the amount of addresses its checking against(The benchmark above was done against all known funded bitcoin addresses, 41, 400,746 in total).
+
+To get a sense of scale, there are 2^64 possible bitcoin addresses. Going at 300K checks/minute, it would take 9.268 x 10<sup>44</sup> years to check all of them. The universe is about 13.8 billion years old.
